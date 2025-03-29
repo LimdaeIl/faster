@@ -10,6 +10,8 @@ import com.common.exception.CustomException;
 import com.common.resolver.dto.UserRole;
 import com.faster.user.app.auth.application.dto.SaveUserRequestDto;
 import com.faster.user.app.auth.application.dto.SignInUserRequestDto;
+import com.faster.user.app.auth.domain.RefreshTokenEntity;
+import com.faster.user.app.auth.infrastructure.RefreshTokenRepository;
 import com.faster.user.app.auth.jwt.JwtProvider;
 import com.faster.user.app.auth.presentation.dto.response.SaveUserResponseDto;
 import com.faster.user.app.auth.presentation.dto.response.SignInUserResponseDto;
@@ -33,6 +35,10 @@ public class AuthServiceImpl implements AuthService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtProvider jwtProvider;
+  private final RedisService redisService;
+  private final RefreshTokenRepository refreshTokenRepository;
+
+
 
   @Value("${jwt.refresh.expiration}")
   private Long refreshTokenExpiration;
@@ -111,9 +117,30 @@ public class AuthServiceImpl implements AuthService {
     return jwtProvider.createAccessToken(userIdFromToken, userRoleFromToken);
   }
 
-  private String getRefreshToken(Long userId) {
+  public void storeRefreshToken(long userId, String refreshToken, boolean isRedis) {
+    if (isRedis) {
+      redisService.saveRefreshToken(userId, refreshToken);
+    } else {
+      refreshTokenRepository.save(new RefreshTokenEntity(userId, refreshToken));
+    }
+  }
+
+
+  // Redis에서 리프레시 토큰 조회
+  public String getRefreshTokenFromRedis(long userId) {
+    return redisService.getRefreshToken(userId);
+  }
+
+  // PostgreSQL에서 리프레시 토큰 조회
+  public String getRefreshTokenFromPostgres(long userId) {
+    return refreshTokenRepository.findByUserId(userId)
+        .map(RefreshTokenEntity::getRefreshToken)
+        .orElse(null);
+  }
+
+  public String getRefreshToken(Long userId) {
     String key = "refreshToken:" + userId;
-    Object token = redisTemplate.opsForValue().get(key);
+    Object token = redisTemplate.opsForHash().get(key, "token");
     return token != null ? token.toString() : null;
   }
 

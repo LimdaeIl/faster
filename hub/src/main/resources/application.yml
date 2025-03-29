@@ -15,7 +15,6 @@ spring:
   profiles:
     group:
       local: local
-      develop: develop
       test: test
       develop: develop
       prod: prod

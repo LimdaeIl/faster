@@ -11,4 +11,7 @@ public interface AuthService {
   SignInUserResponseDto signInUser(SignInUserRequestDto requestDto);
   void logout(Long userId);
   String generateNewAccessToken(Long userId);
+  void storeRefreshToken(long userId, String refreshToken, boolean isRedis);
+  String getRefreshTokenFromRedis(long userId);
+  String getRefreshTokenFromPostgres(long userId);
 }
