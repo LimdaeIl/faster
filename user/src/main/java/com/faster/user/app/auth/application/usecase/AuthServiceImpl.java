@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,6 @@ public class AuthServiceImpl implements AuthService {
   private final JwtProvider jwtProvider;
   private final RedisService redisService;
   private final RefreshTokenRepository refreshTokenRepository;
-
 
 
   @Value("${jwt.refresh.expiration}")
